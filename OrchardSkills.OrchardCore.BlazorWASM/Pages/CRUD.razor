@@ -18,7 +18,6 @@
 
 @code {
     private string accessToken = "[No Access Token Requested]";
-    private string responseBodyToken;
     private string methodGraphQL = "POST";
     private string uriGraphQL = "https://localhost:44342/api/graphql";
     private string requestBodyGraphQL = @"{subscriber {createdUtc, displayText email firstName lastName modifiedUtc publishedUtc contentItemId } }";
@@ -40,5 +39,4 @@
 
         StateHasChanged();
     }
-
 }
