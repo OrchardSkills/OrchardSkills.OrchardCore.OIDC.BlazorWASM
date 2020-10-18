@@ -1,0 +1,44 @@
+﻿@page "/crud"
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@using System.Net.Http.Headers
+@using System.Net.Http.Json
+@inject HttpClient Http
+@inject IAccessTokenProvider TokenProvider
+<AuthorizeView>
+    <Authorized>
+        <h1>CRUD</h1>
+        <h2>Hello @context.User.Identity.Name, press the "Get Token" button to get access token.</h2>
+        <button class="btn btn-success" id="send-request" @onclick="@GetToken">Get Token</button>
+        <p>access token = @accessToken</p>
+    </Authorized>
+    <NotAuthorized>
+        <p>I'm sorry, I can't display CRUD operations until you log in</p>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    private string accessToken = "[No Access Token Requested]";
+    private string responseBodyToken;
+    private string methodGraphQL = "POST";
+    private string uriGraphQL = "https://localhost:44342/api/graphql";
+    private string requestBodyGraphQL = @"{subscriber {createdUtc, displayText email firstName lastName modifiedUtc publishedUtc contentItemId } }";
+    private async void GetToken()
+    {
+        var requestMessage = new HttpRequestMessage()
+        {
+            Method = new HttpMethod(methodGraphQL),
+            RequestUri = new Uri(uriGraphQL),
+            Content = new StringContent(requestBodyGraphQL)
+        };
+
+        var tokenResult = await TokenProvider.RequestAccessToken();
+
+        if (tokenResult.TryGetToken(out var token))
+        {
+            accessToken = token.Value;
+        }
+
+        StateHasChanged();
+    }
+
+}
