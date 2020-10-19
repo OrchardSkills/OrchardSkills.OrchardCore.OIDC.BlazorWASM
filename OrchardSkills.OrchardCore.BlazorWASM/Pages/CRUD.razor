@@ -10,7 +10,24 @@
 <AuthorizeView>
     <Authorized>
 
-
+        <EditForm>
+            <div class="form-row mb-2">
+                <div class="col-md-4">
+                    <label for="exampleInputEmail1">First Name</label>
+                    <input type="text" class="form-control" id="exampleInputEmail1" aria-describedby="FirstName" placeholder="Enter First Name">
+                </div>
+                <div class="col-md-4">
+                    <label for="exampleInputEmail1">Last Name</label>
+                    <input type="text" class="form-control" id="exampleInputEmail1" aria-describedby="LastName" placeholder="Enter Last Name">
+                </div>
+                <div class="col-md-4">
+                    <label for="exampleInputEmail1">Email address</label>
+                    <input type="email" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder="Enter Email">
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary">Add subscriber</button>
+        </EditForm>
+        <br>
         <table class="table">
             <thead class="thead-dark">
                 <tr>
@@ -233,28 +250,28 @@
                 };
 
 
-            @* string body = "{
-                    """ContentItemId""": subscriber.contentItemId,
-                    "DisplayText": subscriber.firstName + " " + subscriber.lastName,
-                    "TitlePart": {
-                        "Title": subscriber.firstName + " " + subscriber.lastName,
-                    },
-                    "Subscriber": {
-                        "FirstName": {
-                            "Text": subscriber.firstName
+                @* string body = "{
+                        """ContentItemId""": subscriber.contentItemId,
+                        "DisplayText": subscriber.firstName + " " + subscriber.lastName,
+                        "TitlePart": {
+                            "Title": subscriber.firstName + " " + subscriber.lastName,
+                        },
+                        "Subscriber": {
+                            "FirstName": {
+                                "Text": subscriber.firstName
+                                },
+                            "LastName": {
+                                "Text": subscriber.lastName
                             },
-                        "LastName": {
-                            "Text": subscriber.lastName
-                        },
-                        "Email": {
-                            "Text": subscriber.email
-                            }
-                        },
-                    "ContainedPart": {
-                        "ListContentItemId": "462m1ps5kkzkp2k5da5pfhh2ww",
-                        "Order": 0
-                    }
-                }"; *@
+                            "Email": {
+                                "Text": subscriber.email
+                                }
+                            },
+                        "ContainedPart": {
+                            "ListContentItemId": "462m1ps5kkzkp2k5da5pfhh2ww",
+                            "Order": 0
+                        }
+                    }"; *@
 
 
 
