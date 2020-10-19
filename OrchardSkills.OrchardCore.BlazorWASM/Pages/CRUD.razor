@@ -11,9 +11,9 @@
         <h1>CRUD</h1>
         <h2>Hello @context.User.Identity.Name, press the "Get Subscribers" button to get a list of Subscribers.</h2>
         <button class="btn btn-success" id="send-request" @onclick="@GetSubscribers">Get Subscribers</button>
-        <p>access token = @accessToken.Value</p>
         @if (responseStatusCodeGraphQL.HasValue)
         {
+            <p>access token = @accessToken.Value</p>
             <h2>Response</h2>
             <p>
                 <div>Status:</div><span id="response-status">@responseStatusCodeGraphQL</span>
@@ -38,7 +38,6 @@
     private HttpResponseMessage httpResponseMessage;
     private string methodGraphQL = "GET";
     private string uriGraphQL = "https://localhost:44342/api/graphql";
-    private string requestBodyGraphQL = @"{subscriber {createdUtc, displayText email firstName lastName modifiedUtc publishedUtc contentItemId } }";
     private System.Net.HttpStatusCode? responseStatusCodeGraphQL;
     private string httpResponseBody;
 
