@@ -235,19 +235,19 @@
 
              string body = "{" +
                     "\"ContentItemId\": \"" + subscriber.contentItemId + "\"," +
-                    "\"DisplayText\": " + subscriber.firstName + " " + subscriber.lastName + "," +
+                    "\"DisplayText\": \"" + subscriber.firstName + " " + subscriber.lastName + "\"," +
                     "\"TitlePart\": {" +
-                        "\"Title\": " + subscriber.firstName + " " + subscriber.lastName + "," +
+                        "\"Title\": \"" + subscriber.firstName + " " + subscriber.lastName + "\"," +
                     "}," +
                     "\"Subscriber\": {" +
                         "\"FirstName\": {" +
-                            "\"Text\": " + subscriber.firstName + 
+                            "\"Text\": " + subscriber.firstName + "\"" +
                             "}," +
                         "\"LastName\": {" +
-                            "\"Text\": " + subscriber.lastName +
+                            "\"Text\": \"" + subscriber.lastName + "\"" +
                         "}," +
                         "\"Email\": {" +
-                            "\"Text\": " + subscriber.email +
+                            "\"Text\": \"" + subscriber.email + "\"" +
                             "}" +
                         "}," +
                     "\"ContainedPart\": {" +
