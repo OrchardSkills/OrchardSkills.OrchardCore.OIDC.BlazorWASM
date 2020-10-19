@@ -273,11 +273,15 @@
                     Content = new StringContent(body)
                 };
 
+                httpRequestMessage.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
+
                 httpRequestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken.Value);
+
 
                 httpResponseMessage = await Http.SendAsync(httpRequestMessage);
 
                 responseStatusCodeGraphQL = httpResponseMessage.StatusCode;
+
                 closeEditSubscriber();
 
                 @* await GetSubscribers(); *@
