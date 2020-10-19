@@ -250,28 +250,28 @@
                 };
 
 
-                @* string body = "{
-                        """ContentItemId""": subscriber.contentItemId,
-                        "DisplayText": subscriber.firstName + " " + subscriber.lastName,
-                        "TitlePart": {
-                            "Title": subscriber.firstName + " " + subscriber.lastName,
-                        },
-                        "Subscriber": {
-                            "FirstName": {
-                                "Text": subscriber.firstName
-                                },
-                            "LastName": {
-                                "Text": subscriber.lastName
-                            },
-                            "Email": {
-                                "Text": subscriber.email
-                                }
-                            },
-                        "ContainedPart": {
-                            "ListContentItemId": "462m1ps5kkzkp2k5da5pfhh2ww",
-                            "Order": 0
-                        }
-                    }"; *@
+             string body = "{" +
+                    "\"ContentItemId\": " + subscriber.contentItemId + "," +
+                    "\"DisplayText\": " + subscriber.firstName + " " + subscriber.lastName + "," +
+                    "\"TitlePart\": {" +
+                        "\"Title\": " + subscriber.firstName + " " + subscriber.lastName + "," +
+                    "}," +
+                    "\"Subscriber\": {" +
+                        "\"FirstName\": {" +
+                            "\"Text\": " + subscriber.firstName + 
+                            "}," +
+                        "\"LastName\": {" +
+                            "\"Text\": " + subscriber.lastName +
+                        "}," +
+                        "\"Email\": {" +
+                            "\"Text\": " + subscriber.email +
+                            "}" +
+                        "}," +
+                    "\"ContainedPart\": {" +
+                        "\"ListContentItemId\": \"462m1ps5kkzkp2k5da5pfhh2ww\"," +
+                        "\"Order\": 0" +
+                    "}" +
+                "}"; 
 
 
 
