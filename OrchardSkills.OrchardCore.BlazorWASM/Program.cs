@@ -1,4 +1,3 @@
-using BlazorWASM.Security;
 using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -15,26 +14,24 @@ namespace BlazorWASM
             var builder = WebAssemblyHostBuilder.CreateDefault(args);
             builder.RootComponents.Add<App>("app");
 
-            builder.Services.AddHttpClient("api")
+            builder.Services.AddHttpClient("client")
                 .AddHttpMessageHandler(sp =>
                 {
                     var handler = sp.GetService<AuthorizationMessageHandler>()
                         .ConfigureHandler(
                             authorizedUrls: new[] { "https://localhost:44342" },
-                            scopes: new[] { "weatherapi" });
+                            scopes: new[] { "openid", "profile", "api" });
 
                     return handler;
                 });
 
-            builder.Services.AddScoped(sp => sp.GetService<IHttpClientFactory>().CreateClient("api"));
+            builder.Services.AddScoped(sp => sp.GetService<IHttpClientFactory>().CreateClient("client"));
 
             builder.Services
                 .AddOidcAuthentication(options =>
                 {
                     builder.Configuration.Bind("oidc", options.ProviderOptions);
-                    options.UserOptions.RoleClaim = "role";
-                })
-                .AddAccountClaimsPrincipalFactory<ArrayClaimsPrincipalFactory<RemoteUserAccount>>();
+                });
 
             await builder.Build().RunAsync();
         }
