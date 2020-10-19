@@ -9,7 +9,7 @@
 @inject IAccessTokenProvider TokenProvider
 <AuthorizeView>
     <Authorized>
-
+        
         <form>
             <div class="form-row mb-2">
                 <div class="col-md-4">
@@ -242,45 +242,42 @@
             {
 
 
+                string body = "{" +
+                       "\"ContentItemId\": \"" + subscriber.contentItemId + "\"," +
+                       "\"DisplayText\": \"" + subscriber.firstName + " " + subscriber.lastName + "\"," +
+                       "\"TitlePart\": {" +
+                           "\"Title\": \"" + subscriber.firstName + " " + subscriber.lastName + "\"" +
+                       "}," +
+                       "\"Subscriber\": {" +
+                           "\"FirstName\": {" +
+                               "\"Text\": \"" + subscriber.firstName + "\"" +
+                               "}," +
+                           "\"LastName\": {" +
+                               "\"Text\": \"" + subscriber.lastName + "\"" +
+                           "}," +
+                           "\"Email\": {" +
+                               "\"Text\": \"" + subscriber.email + "\"" +
+                               "}" +
+                           "}," +
+                       "\"ContainedPart\": {" +
+                           "\"ListContentItemId\": \"462m1ps5kkzkp2k5da5pfhh2ww\"," +
+                           "\"Order\": 0" +
+                       "}" +
+                   "}";
+
 
                 httpRequestMessage = new HttpRequestMessage()
                 {
                     Method = new HttpMethod(methodeUpdateContent),
-                    RequestUri = new Uri(uriContent + subscriber.contentItemId)
+                    RequestUri = new Uri(uriContent),
+                    Content = new StringContent(body)
                 };
-
-
-             string body = "{" +
-                    "\"ContentItemId\": \"" + subscriber.contentItemId + "\"," +
-                    "\"DisplayText\": \"" + subscriber.firstName + " " + subscriber.lastName + "\"," +
-                    "\"TitlePart\": {" +
-                        "\"Title\": \"" + subscriber.firstName + " " + subscriber.lastName + "\"" +
-                    "}," +
-                    "\"Subscriber\": {" +
-                        "\"FirstName\": {" +
-                            "\"Text\": \"" + subscriber.firstName + "\"" +
-                            "}," +
-                        "\"LastName\": {" +
-                            "\"Text\": \"" + subscriber.lastName + "\"" +
-                        "}," +
-                        "\"Email\": {" +
-                            "\"Text\": \"" + subscriber.email + "\"" +
-                            "}" +
-                        "}," +
-                    "\"ContainedPart\": {" +
-                        "\"ListContentItemId\": \"462m1ps5kkzkp2k5da5pfhh2ww\"," +
-                        "\"Order\": 0" +
-                    "}" +
-                "}"; 
-
-
-
 
                 httpRequestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken.Value);
 
                 httpResponseMessage = await Http.SendAsync(httpRequestMessage);
 
-
+                responseStatusCodeGraphQL = httpResponseMessage.StatusCode;
                 closeEditSubscriber();
 
                 @* await GetSubscribers(); *@
