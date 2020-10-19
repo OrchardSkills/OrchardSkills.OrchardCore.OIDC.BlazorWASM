@@ -1,8 +1,10 @@
 ﻿@page "/crud"
+@using Microsoft.AspNetCore.Components.WebAssembly.Http
 @using Microsoft.AspNetCore.Components.WebAssembly.Authentication
 @using System.Net.Http.Headers
 @using System.Net.Http.Json
 @inject HttpClient Http
+@inject NavigationManager NavigationManager
 @inject IAccessTokenProvider TokenProvider
 <AuthorizeView>
     <Authorized>
@@ -10,6 +12,20 @@
         <h2>Hello @context.User.Identity.Name, press the "Get Token" button to get access token.</h2>
         <button class="btn btn-success" id="send-request" @onclick="@GetToken">Get Token</button>
         <p>access token = @accessToken.Value</p>
+        @if (responseStatusCodeGraphQL.HasValue)
+        {
+            <h2>Response</h2>
+            <p>
+                <div>Status:</div><span id="response-status">@responseStatusCodeGraphQL</span>
+            </p>
+            <div class="input-group">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">Exception</span>
+                </div>
+                <textarea id="response-body" style="min-height: 400px;" readonly class="form-control"
+                          aria-label="With textarea">@exceptionErrorMessage</textarea>
+            </div>
+        }
     </Authorized>
     <NotAuthorized>
         <p>I'm sorry, I can't display CRUD operations until you log in</p>
@@ -18,23 +34,49 @@
 
 @code {
     private AccessToken accessToken = new AccessToken();
+    private HttpRequestMessage httpRequestMessage;
+    private HttpResponseMessage httpResponseMessage;
     private string methodGraphQL = "POST";
     private string uriGraphQL = "https://localhost:44342/api/graphql";
     private string requestBodyGraphQL = @"{subscriber {createdUtc, displayText email firstName lastName modifiedUtc publishedUtc contentItemId } }";
+    private System.Net.HttpStatusCode? responseStatusCodeGraphQL;
+    private string exceptionErrorMessage;
+
     private async void GetToken()
     {
-        var requestMessage = new HttpRequestMessage()
-        {
-            Method = new HttpMethod(methodGraphQL),
-            RequestUri = new Uri(uriGraphQL),
-            Content = new StringContent(requestBodyGraphQL)
-        };
 
-        var tokenResult = await TokenProvider.RequestAccessToken();
-
-        if (tokenResult.TryGetToken(out var token))
+        try
         {
-            accessToken = token;
+            var tokenResult = await TokenProvider.RequestAccessToken();
+
+            if (tokenResult.TryGetToken(out var token))
+            {
+                accessToken = token;
+
+                httpRequestMessage = new HttpRequestMessage()
+                {
+                    Method = new HttpMethod(methodGraphQL),
+                    RequestUri = new Uri(uriGraphQL),
+                    Content = new StringContent(requestBodyGraphQL),
+                };
+
+                httpRequestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token.Value);
+
+                httpResponseMessage = await Http.SendAsync(httpRequestMessage);
+
+                responseStatusCodeGraphQL = httpResponseMessage.StatusCode;
+
+            }
+        }
+
+        catch (Exception ex)
+        {
+            if (ex is AggregateException)
+            {
+                ex = ex.InnerException;
+            }
+            responseStatusCodeGraphQL = System.Net.HttpStatusCode.SeeOther;
+            exceptionErrorMessage = ex.Message + Environment.NewLine + ex.StackTrace;
         }
 
         StateHasChanged();
