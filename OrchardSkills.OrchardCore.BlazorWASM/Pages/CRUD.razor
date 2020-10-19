@@ -9,7 +9,7 @@
         <h1>CRUD</h1>
         <h2>Hello @context.User.Identity.Name, press the "Get Token" button to get access token.</h2>
         <button class="btn btn-success" id="send-request" @onclick="@GetToken">Get Token</button>
-        <p>access token = @accessToken</p>
+        <p>access token = @accessToken.Value</p>
     </Authorized>
     <NotAuthorized>
         <p>I'm sorry, I can't display CRUD operations until you log in</p>
@@ -17,7 +17,7 @@
 </AuthorizeView>
 
 @code {
-    private string accessToken = "[No Access Token Requested]";
+    private AccessToken accessToken = new AccessToken();
     private string methodGraphQL = "POST";
     private string uriGraphQL = "https://localhost:44342/api/graphql";
     private string requestBodyGraphQL = @"{subscriber {createdUtc, displayText email firstName lastName modifiedUtc publishedUtc contentItemId } }";
@@ -34,7 +34,7 @@
 
         if (tokenResult.TryGetToken(out var token))
         {
-            accessToken = token.Value;
+            accessToken = token;
         }
 
         StateHasChanged();
