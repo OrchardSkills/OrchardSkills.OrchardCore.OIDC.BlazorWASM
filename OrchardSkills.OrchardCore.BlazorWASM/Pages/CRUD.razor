@@ -3,29 +3,87 @@
 @using Microsoft.AspNetCore.Components.WebAssembly.Authentication
 @using System.Net.Http.Headers
 @using System.Net.Http.Json
+@using System.Text.Json
 @inject HttpClient Http
 @inject NavigationManager NavigationManager
 @inject IAccessTokenProvider TokenProvider
 <AuthorizeView>
     <Authorized>
-        <h1>CRUD</h1>
-        <h2>Hello @context.User.Identity.Name, press the "Get Subscribers" button to get a list of Subscribers.</h2>
-        <button class="btn btn-success" id="send-request" @onclick="@GetSubscribers">Get Subscribers</button>
-        @if (responseStatusCodeGraphQL.HasValue)
-        {
-            <p>access token = @accessToken.Value</p>
-            <h2>Response</h2>
-            <p>
-                <div>Status:</div><span id="response-status">@responseStatusCodeGraphQL</span>
-            </p>
-            <div class="input-group">
-                <div class="input-group-prepend">
-                    <span class="input-group-text">Body/Exception</span>
-                </div>
-                <textarea id="response-body" style="min-height: 400px;" readonly class="form-control"
-                          aria-label="With textarea">@httpResponseBody</textarea>
-            </div>
-        }
+
+
+        <table class="table">
+            <thead class="thead-dark">
+                <tr>
+                    <th scope="col">First Name</th>
+                    <th scope="col">Last Name</th>
+                    <th scope="col">Email</th>
+                    <th scope="col">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (responseStatusCodeGraphQL.HasValue)
+                {
+                    @foreach (var subscriber in apiGraphQL.data.subscriber)
+                    {
+                        <tr>
+                            @if (subscriberToEdit?.contentItemId != subscriber.contentItemId)
+                            {
+                                <td>@subscriber.firstName</td>
+                                <td>@subscriber.lastName</td>
+                                <td>@subscriber.email</td>
+                                <td>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <button type="button" class="btn btn-primary" @onclick="@(() => OpenEditSubscriber(subscriber))">Edit</button>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <button type="button" @onclick="@(() => deleteSubscriber(subscriber.contentItemId))" class="btn btn-danger">Delete</button>
+                                        </div>
+                                    </div>
+                                </td>
+
+                            }
+
+                            @if (Editing && subscriberToEdit?.contentItemId == subscriber.contentItemId)
+                            {
+                                <td>
+                                    <input type="text" class="form-control" placeholder="First Name" aria-label="First Name"
+                                           @bind="@subscriber.firstName" name="firstName" />
+                                </td>
+                                <td>
+                                    <input type="text" class="form-control" placeholder="First Name" aria-label="First Name"
+                                           @bind="@subscriber.lastName" name="lastName" />
+                                </td>
+
+                                <td>
+                                    <input type="email" class="form-control" ngModel placeholder="Email" aria-label="Email"
+                                           @bind="@subscriber.email" name="email" />
+                                </td>
+
+                                <td>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <button type="button" (click)="updateSubscriber(subscriber)" class="btn btn-primary"
+                                                    data-toggle="modal" data-target="#exampleModal">
+                                                Update
+                                            </button>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <button type="button" @onclick="closeEditSubscriber" class="btn btn-danger">
+                                                Cancel
+                                            </button>
+                                        </div>
+                                    </div>
+                                </td>
+                            }
+
+
+                        </tr>
+                    }
+                }
+
+            </tbody>
+        </table>
     </Authorized>
     <NotAuthorized>
         <p>I'm sorry, I can't display CRUD operations until you log in</p>
@@ -37,20 +95,74 @@
     private HttpRequestMessage httpRequestMessage;
     private HttpResponseMessage httpResponseMessage;
     private string methodGraphQL = "GET";
+    private string methodeUpdateContent = "POST";
+    private string methodeDeleteContent = "DELETE";
     private string uriGraphQL = "https://localhost:44342/api/graphql";
-    private System.Net.HttpStatusCode? responseStatusCodeGraphQL;
+    private string uriContent = "https://localhost:44342/api/content/";
+    private System.Net.HttpStatusCode? responseStatusCodeGraphQL = null;
     private string httpResponseBody;
 
-    private async void GetSubscribers()
+    private bool Editing = false;
+
+    private subscriber subscriberToEdit;
+    private ApiGraphQL apiGraphQL;
+
+    public class ApiGraphQL
+    {
+        public data data { get; set; }
+    }
+
+    public class data
+    {
+        public subscriber[] subscriber { get; set; }
+    }
+
+    public class subscriber
+    {
+
+        public string createdUtc { get; set; }
+
+        public string displayText { get; set; }
+
+        public string email { get; set; }
+
+        public string firstName { get; set; }
+        public string lastName { get; set; }
+        public string modifiedUtc { get; set; }
+        public string publishedUtc { get; set; }
+        public string contentItemId { get; set; }
+    }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        await GetSubscribers();
+    }
+
+    private async Task GetToken()
+    {
+        var now = DateTimeOffset.UtcNow;
+        var expires = accessToken.Expires;
+        if (expires < now)
+        {
+            var tokenResult = await TokenProvider.RequestAccessToken();
+            if (tokenResult.TryGetToken(out var token))
+            {
+                accessToken = token;
+            }
+        }
+    }
+    private async Task GetSubscribers()
     {
 
         try
         {
-            var tokenResult = await TokenProvider.RequestAccessToken();
 
-            if (tokenResult.TryGetToken(out var token))
+            await GetToken();
+
             {
-                accessToken = token;
+
 
                 httpRequestMessage = new HttpRequestMessage()
                 {
@@ -58,13 +170,146 @@
                     RequestUri = new Uri(uriGraphQL + "?query={subscriber {createdUtc, displayText email firstName lastName modifiedUtc publishedUtc contentItemId }}")
                 };
 
-                httpRequestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token.Value);
+                httpRequestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken.Value);
 
                 httpResponseMessage = await Http.SendAsync(httpRequestMessage);
 
                 responseStatusCodeGraphQL = httpResponseMessage.StatusCode;
 
                 httpResponseBody = await httpResponseMessage.Content.ReadAsStringAsync();
+                apiGraphQL = JsonSerializer.Deserialize<ApiGraphQL>(httpResponseBody);
+
+            }
+        }
+
+        catch (Exception ex)
+        {
+            if (ex is AggregateException)
+            {
+                ex = ex.InnerException;
+            }
+            responseStatusCodeGraphQL = System.Net.HttpStatusCode.SeeOther;
+            httpResponseBody = ex.Message + Environment.NewLine + ex.StackTrace;
+        }
+
+        StateHasChanged();
+    }
+
+
+
+    private void OpenEditSubscriber(subscriber subscriber)
+    {
+        Editing = true;
+        subscriberToEdit = subscriber;
+    }
+
+    private void closeEditSubscriber()
+    {
+        Editing = false;
+        this.subscriberToEdit = null;
+    }
+
+
+
+
+
+    private async Task UpdateSubscribers(subscriber subscriber)
+    {
+
+
+        try
+        {
+
+            await GetToken();
+
+            {
+
+
+
+                httpRequestMessage = new HttpRequestMessage()
+                {
+                    Method = new HttpMethod(methodeUpdateContent),
+                    RequestUri = new Uri(uriContent + subscriber.contentItemId)
+                };
+
+
+            @* string body = "{
+                    """ContentItemId""": subscriber.contentItemId,
+                    "DisplayText": subscriber.firstName + " " + subscriber.lastName,
+                    "TitlePart": {
+                        "Title": subscriber.firstName + " " + subscriber.lastName,
+                    },
+                    "Subscriber": {
+                        "FirstName": {
+                            "Text": subscriber.firstName
+                            },
+                        "LastName": {
+                            "Text": subscriber.lastName
+                        },
+                        "Email": {
+                            "Text": subscriber.email
+                            }
+                        },
+                    "ContainedPart": {
+                        "ListContentItemId": "462m1ps5kkzkp2k5da5pfhh2ww",
+                        "Order": 0
+                    }
+                }"; *@
+
+
+
+
+                httpRequestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken.Value);
+
+                httpResponseMessage = await Http.SendAsync(httpRequestMessage);
+
+
+                @* await GetSubscribers(); *@
+
+            }
+        }
+
+        catch (Exception ex)
+        {
+            if (ex is AggregateException)
+            {
+                ex = ex.InnerException;
+            }
+            responseStatusCodeGraphQL = System.Net.HttpStatusCode.SeeOther;
+            httpResponseBody = ex.Message + Environment.NewLine + ex.StackTrace;
+        }
+
+        StateHasChanged();
+    }
+
+    private async Task deleteSubscriber(string id)
+    {
+        try
+        {
+            await GetToken();
+
+            {
+
+
+
+                httpRequestMessage = new HttpRequestMessage()
+                {
+                    Method = new HttpMethod(methodeDeleteContent),
+                    RequestUri = new Uri(uriContent + id)
+                };
+
+
+
+
+
+
+
+                httpRequestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken.Value);
+
+                httpResponseMessage = await Http.SendAsync(httpRequestMessage);
+
+
+                await GetSubscribers();
 
             }
         }
