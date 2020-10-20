@@ -1,3 +1,4 @@
+using Blazored.Toast;
 using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -24,7 +25,7 @@ namespace BlazorWASM
 
                     return handler;
                 });
-
+            builder.Services.AddBlazoredToast();
             builder.Services.AddScoped(sp => sp.GetService<IHttpClientFactory>().CreateClient("client"));
 
             builder.Services

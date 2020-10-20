@@ -7,26 +7,35 @@
 @inject HttpClient Http
 @inject NavigationManager NavigationManager
 @inject IAccessTokenProvider TokenProvider
+@inject IToastService toastService
+
+<BlazoredToasts Timeout="3"
+                IconType="IconType.FontAwesome"
+                SuccessClass="success-toast-override"
+                SuccessIcon="fas fa-thumbs-up"
+                ShowProgressBar="true"
+                ErrorIcon="fas fa-bug" />
+                
 <AuthorizeView>
-    <Authorized>
-        
-        <form>
+    <Authorized Context="auth">
+
+        <EditForm Model="subscriberForm" OnValidSubmit="addSubscriber">
             <div class="form-row mb-2">
                 <div class="col-md-4">
-                    <label for="exampleInputEmail1">First Name</label>
-                    <input type="text" class="form-control" id="exampleInputEmail1" aria-describedby="FirstName" placeholder="Enter First Name">
+                    <label for="firstName">First Name</label>
+                    <input required type="text" class="form-control" name="firstName" id="firstName" @bind-value="subscriberForm.firstName" aria-describedby="FirstName" placeholder="Enter First Name">
                 </div>
                 <div class="col-md-4">
-                    <label for="exampleInputEmail1">Last Name</label>
-                    <input type="text" class="form-control" id="exampleInputEmail1" aria-describedby="LastName" placeholder="Enter Last Name">
+                    <label for="lastName">Last Name</label>
+                    <input required type="text" class="form-control" name="lastName" id="lastName" @bind-value="subscriberForm.lastName" aria-describedby="LastName" placeholder="Enter Last Name">
                 </div>
                 <div class="col-md-4">
-                    <label for="exampleInputEmail1">Email address</label>
-                    <input type="email" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder="Enter Email">
+                    <label for="eemail">Email address</label>
+                    <input required type="email" class="form-control" name="email" id="email" @bind-value="subscriberForm.email" aria-describedby="emailHelp" placeholder="Enter Email">
                 </div>
             </div>
             <button type="submit" class="btn btn-primary">Add subscriber</button>
-        </form>
+        </EditForm>
         <br>
         <table class="table">
             <thead class="thead-dark">
@@ -118,6 +127,8 @@
     private string uriContent = "https://localhost:44342/api/content/";
     private System.Net.HttpStatusCode? responseStatusCodeGraphQL = null;
     private string httpResponseBody;
+
+    private subscriber subscriberForm = new subscriber();
 
     private bool Editing = false;
 
@@ -284,6 +295,8 @@
 
                 closeEditSubscriber();
 
+                toastService.ShowToast(ToastLevel.Success, "You successfully update subscriber");
+
                 @* await GetSubscribers(); *@
 
             }
@@ -297,6 +310,7 @@
             }
             responseStatusCodeGraphQL = System.Net.HttpStatusCode.SeeOther;
             httpResponseBody = ex.Message + Environment.NewLine + ex.StackTrace;
+            toastService.ShowToast(ToastLevel.Error ,"There was an error");
         }
 
         StateHasChanged();
@@ -328,7 +342,7 @@
 
                 httpResponseMessage = await Http.SendAsync(httpRequestMessage);
 
-
+                toastService.ShowToast(ToastLevel.Success, "You successfully delete subscriber");
                 await GetSubscribers();
 
             }
@@ -342,8 +356,81 @@
             }
             responseStatusCodeGraphQL = System.Net.HttpStatusCode.SeeOther;
             httpResponseBody = ex.Message + Environment.NewLine + ex.StackTrace;
+            toastService.ShowToast(ToastLevel.Error ,"There was an error");
         }
 
         StateHasChanged();
+    }
+
+    private async Task addSubscriber()
+    {
+        try
+        {
+            await GetToken();
+
+            {
+
+
+
+                string body = "{" +
+                                    "\"ContentType\": \"" + "Subscriber" + "\"," +
+                                    "\"DisplayText\": \"" + subscriberForm.firstName + " " + subscriberForm.lastName + "\"," +
+                                    "\"Owner\": \"" + "sales" + "\"," +
+                                    "\"Author\": \"" + "salse" + "\"," +
+                                    "\"TitlePart\": {" +
+                                        "\"Title\": \"" + subscriberForm.firstName + " " + subscriberForm.lastName + "\"" +
+                                    "}," +
+                                    "\"Subscriber\": {" +
+                                        "\"FirstName\": {" +
+                                            "\"Text\": \"" + subscriberForm.firstName + "\"" +
+                                            "}," +
+                                        "\"LastName\": {" +
+                                            "\"Text\": \"" + subscriberForm.lastName + "\"" +
+                                        "}," +
+                                        "\"Email\": {" +
+                                            "\"Text\": \"" + subscriberForm.email + "\"" +
+                                            "}" +
+                                        "}," +
+                                    "\"ContainedPart\": {" +
+                                        "\"ListContentItemId\": \"462m1ps5kkzkp2k5da5pfhh2ww\"," +
+                                         "\"Order\": 0" +
+                                    "}" +
+                                "}";
+
+                httpRequestMessage = new HttpRequestMessage()
+                {
+                    Method = new HttpMethod(methodeUpdateContent),
+                    RequestUri = new Uri(uriContent),
+                    Content = new StringContent(body)
+                };
+
+                httpRequestMessage.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
+
+                httpRequestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken.Value);
+
+                httpResponseMessage = await Http.SendAsync(httpRequestMessage);
+
+                subscriberForm.firstName = "";
+                subscriberForm.lastName = "";
+                subscriberForm.email = "";
+                toastService.ShowToast(ToastLevel.Success, "You successfully add subscriber");
+                await GetSubscribers();
+
+            }
+        }
+
+        catch (Exception ex)
+        {
+            if (ex is AggregateException)
+            {
+                ex = ex.InnerException;
+            }
+            responseStatusCodeGraphQL = System.Net.HttpStatusCode.SeeOther;
+            httpResponseBody = ex.Message + Environment.NewLine + ex.StackTrace;
+            toastService.ShowToast(ToastLevel.Error ,"There was an error");
+        }
+
+        StateHasChanged();
+
     }
 }
